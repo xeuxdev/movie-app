@@ -1,8 +1,9 @@
 import { NavigationContainer } from "@react-navigation/native"
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { StatusBar } from "react-native"
 import HomeScreen from "./src/screens/Home"
+import MovieDetails from "./src/screens/movie-details"
+import AllMovies from "./src/screens/AllMovies"
 
 export default function App() {
   const Stack = createNativeStackNavigator()
@@ -16,7 +17,14 @@ export default function App() {
             header: () => null,
           }}
         />
-        <Stack.Screen name="AllMovies" component={HomeScreen} />
+        <Stack.Screen name="AllMovies" component={AllMovies} />
+        <Stack.Screen
+          name="MovieDetails"
+          component={MovieDetails}
+          options={{
+            header: () => null,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   )

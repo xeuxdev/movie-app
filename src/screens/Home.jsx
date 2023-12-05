@@ -7,13 +7,15 @@ import {
   Text,
   TextInput,
   View,
+  Pressable,
+  ScrollView,
 } from "react-native"
-import { useFetch } from "../hooks/usefetch"
-import { API_KEY, getNowPlaying } from "../api"
+import { getNowPlaying, getTopMovies, getUpcoming } from "../api"
+import Animated from "react-native-reanimated"
 
-function HomeScreen() {
+function HomeScreen({ navigation }) {
   return (
-    <View className="flex-1 p-5 bg-purple-950">
+    <ScrollView className="flex-1 p-5 bg-purple-950">
       <StatusBar />
 
       <View className="flex flex-row items-center justify-between">
@@ -33,16 +35,16 @@ function HomeScreen() {
         />
       </View>
 
-      <NowPlaying />
-      <ComingSoon />
-      <TopMovies />
-    </View>
+      <NowPlaying navigation={navigation} />
+      <ComingSoon navigation={navigation} />
+      <TopMovies navigation={navigation} />
+    </ScrollView>
   )
 }
 
 export default HomeScreen
 
-const NowPlaying = () => {
+const NowPlaying = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState([])
   const [error, setError] = useState("")
@@ -51,7 +53,7 @@ const NowPlaying = () => {
     setIsLoading(true)
     getNowPlaying()
       .then((res) => {
-        console.log(res)
+        // console.log(res)
         setData(res.results)
       })
       .catch((err) => {
@@ -63,54 +65,135 @@ const NowPlaying = () => {
       })
   }, [])
 
-  console.log(data)
-  if (isLoading) {
-    return <ActivityIndicator size={"large"} key={"now_playing"} />
-  }
-
   if (error !== "") {
     return <View>Error na in sub</View>
   }
 
   return (
     <View className="my-5" key={"now_playing"}>
-      <Text className="text-lg font-semibold">Now Playing</Text>
+      <Text className="pb-2 text-lg font-semibold text-white">Now Playing</Text>
 
-      <FlatList
-        data={data?.results}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{
-          paddingHorizontal: 10,
-        }}
-        renderItem={({ item }) => (
-          <View className="w-40 h-40 mr-3 bg-red-500">
-            <Image
-              source={{
-                uri: `https://image.tmdb.org/t/p/w300${item?.poster_path}`,
-              }}
-              className="w-20 h-20"
-            />
-          </View>
+      <View className="py-5">
+        {isLoading ? (
+          <ActivityIndicator size={"large"} key={"now_playing"} />
+        ) : (
+          <MovieList data={data} navigation={navigation} key={"now_playing"} />
         )}
-      />
+      </View>
     </View>
   )
 }
 
-const ComingSoon = () => {
+const ComingSoon = ({ navigation }) => {
+  const [isLoading, setIsLoading] = useState(false)
+  const [data, setData] = useState([])
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    setIsLoading(true)
+    getUpcoming()
+      .then((res) => {
+        // console.log(res)
+        setData(res.results)
+      })
+      .catch((err) => {
+        console.log(err)
+        setError(err)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }, [])
+
+  if (error !== "") {
+    return <View>Error na in sub</View>
+  }
+
   return (
-    <View className="my-5">
-      <Text className="text-lg font-semibold">Coming Soon</Text>
+    <View className="my-5" key={"coming_soon"}>
+      <Text className="pb-2 text-lg font-semibold text-white">Coming Soon</Text>
+
+      <View className="py-5">
+        {isLoading ? (
+          <ActivityIndicator size={"large"} key={"coming_soon"} />
+        ) : (
+          <MovieList data={data} navigation={navigation} key={"coming_soon"} />
+        )}
+      </View>
     </View>
   )
 }
 
-const TopMovies = () => {
+const TopMovies = ({ navigation }) => {
+  const [isLoading, setIsLoading] = useState(false)
+  const [data, setData] = useState([])
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    setIsLoading(true)
+    getTopMovies()
+      .then((res) => {
+        // console.log(res)
+        setData(res.results)
+      })
+      .catch((err) => {
+        console.log(err)
+        setError(err)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }, [])
+
+  // console.log(data)
+
+  if (error !== "") {
+    return <View>Error na in sub</View>
+  }
+
   return (
-    <View className="my-5">
-      <Text className="text-lg font-semibold">Top Movies</Text>
+    <View className="my-5" key={"top_movies"}>
+      <Text className="pb-2 text-lg font-semibold text-white">Top Movies</Text>
+
+      <View className="py-5">
+        {isLoading ? (
+          <ActivityIndicator size={"large"} key={"top_movies"} />
+        ) : (
+          <MovieList data={data} navigation={navigation} key={"top_movies"} />
+        )}
+      </View>
     </View>
+  )
+}
+
+const MovieList = ({ data, navigation }) => {
+  return (
+    <FlatList
+      data={data}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={{
+        paddingHorizontal: 10,
+        gap: 20,
+      }}
+      renderItem={({ item }) => (
+        <Pressable
+          onPress={() => navigation.navigate("MovieDetails", { id: item.id })}
+        >
+          <Animated.Image
+            source={{
+              uri: `https://image.tmdb.org/t/p/w300${item?.poster_path}`,
+            }}
+            style={{
+              width: 150,
+              height: 150,
+            }}
+            className="rounded-md"
+            sharedTransitionTag={`${item.id}`}
+          />
+        </Pressable>
+      )}
+    />
   )
 }
